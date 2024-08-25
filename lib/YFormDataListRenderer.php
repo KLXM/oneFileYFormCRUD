@@ -12,10 +12,13 @@ class YFormDataListRenderer
     private ?int $editStatus = null;
     private ?string $userField = null;
     private string $formYtemplate = 'uikit3,project,bootstrap'; // Standardwert
+    private array $formatCallbacks = [];
+    private array $fieldLabels = [];
 
     public function setTableName(string $tableName): void
     {
         $this->tableName = $tableName;
+        $this->loadFieldLabels();
     }
 
     public function setFields(array $fields): void
@@ -66,6 +69,26 @@ class YFormDataListRenderer
     public function setFormYtemplate(string $formYtemplate): void
     {
         $this->formYtemplate = $formYtemplate;
+    }
+
+    public function setFormatCallback(string $field, callable $callback): void
+    {
+        $this->formatCallbacks[$field] = $callback;
+    }
+
+    private function loadFieldLabels(): void
+    {
+        $table = rex_yform_manager_table::get($this->tableName);
+        if ($table) {
+            foreach ($table->getFields() as $field) {
+                $this->fieldLabels[$field->getName()] = $field->getLabel();
+            }
+        }
+    }
+
+    private function getFieldLabel(string $field): string
+    {
+        return $this->fieldLabels[$field] ?? $field;
     }
 
     public function render(): string
@@ -191,11 +214,12 @@ class YFormDataListRenderer
 
         // Kopfzeile für die Tabelle erstellen und Sortierlinks hinzufügen
         foreach ($this->fields as $field) {
+            $label = $this->getFieldLabel($field);
             $sortIcon = '';
             if ($field == $currentSortField) {
                 $sortIcon = $currentSortOrder === 'ASC' ? ' &uarr;' : ' &darr;';
             }
-            $output .= '<th><a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['sort' => $field, 'order' => $nextSortOrder]) . '">' . htmlspecialchars($field) . $sortIcon . '</a></th>';
+            $output .= '<th><a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['sort' => $field, 'order' => $nextSortOrder]) . '">' . htmlspecialchars($label) . $sortIcon . '</a></th>';
         }
         $output .= '<th>Aktionen</th>';
         $output .= '</tr></thead>';
@@ -212,7 +236,12 @@ class YFormDataListRenderer
                     $value = $this->translations[$field][$value];
                 }
 
-                $output .= '<td>' . $value . '</td>'; // Hier wird $value direkt ausgegeben, um HTML zu ermöglichen
+                // Formatierung mit Callback, falls vorhanden
+                if (isset($this->formatCallbacks[$field])) {
+                    $value = call_user_func($this->formatCallbacks[$field], $value);
+                }
+
+                $output .= '<td>' . $value . '</td>';
             }
 
             // Bearbeiten- und Löschen-Icons erstellen
@@ -231,9 +260,6 @@ class YFormDataListRenderer
         }
 
         $output .= '</tbody></table></div>';
-
-        // JavaScript für den Live-Filter hinzufügen
-        $output .= '<script src="path/to/your/javascript/file.js"></script>';
 
         return $output;
     }
