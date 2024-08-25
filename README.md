@@ -175,6 +175,15 @@ $renderer->setUserField('author');
 // Optional: Formulartemplate anpassen
 // $renderer->setFormYtemplate('custom_template');
 
+// Callbacks für die Formatierung
+$renderer->setFormatCallback('title', function($value) {
+    return '<strong>' . htmlspecialchars($value) . '</strong>';
+});
+
+$renderer->setFormatCallback('date', function($value) {
+    return date('d.m.Y', strtotime($value));
+});
+
 // Liste rendern und ausgeben
 if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
     echo $renderer->render();
