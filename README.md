@@ -7,7 +7,7 @@ Frontend CRUD für REDAXO YForm Tabellen (Uikit)
 ```php
 // Beispiel für die Nutzung der Klasse
 $renderer = new YFormDataListRenderer();
-$renderer->setTableName('rex_yf_service');
+$renderer->setTableName('rex_newstable');
 $renderer->setFields(['city', 'name', 'status']);
 $renderer->setEditLinkPattern(rex_getUrl('', '', ['func' => 'edit', 'id' => '{id}']));
 $renderer->setDefaultSortField('name');
