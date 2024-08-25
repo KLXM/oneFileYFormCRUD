@@ -142,12 +142,6 @@ Javascript siehe oben
 ```php
 <?php
 
-// Sicherstellen, dass die Klasse geladen ist (normalerweise sollte sie über ein Addon oder eine eigene Klasse verfügbar sein)
-if (!class_exists('YFormDataListRenderer')) {
-    // Hier die Klasse entweder einbinden oder anderweitig laden
-    // require_once 'path/to/YFormDataListRenderer.php';
-}
-
 $renderer = new YFormDataListRenderer();
 
 // Tabelle festlegen
