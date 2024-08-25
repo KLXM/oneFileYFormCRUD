@@ -8,8 +8,8 @@ class YFormDataListRenderer
     private string $defaultSortOrder = 'ASC';
     private ?int $districtId = null;
     private array $translations = [];
-    private ?int $newStatus = null;
-    private ?int $editStatus = null;
+    private ?int $newStatus = 0;
+    private ?int $editStatus = 1;
     private ?string $userField = null;
     private string $formYtemplate = 'uikit3,project,bootstrap'; // Standardwert
     private array $formatCallbacks = [];
