@@ -19,7 +19,7 @@ $renderer->setTranslations([
     ]
 ]);
 $renderer->setNewStatus(0);
-$renderer->setEditStatus(2);
+$renderer->setEditStatus(1);
 $renderer->setUserField('suser');
 
 // Optional: Ändere das Template, falls nötig
