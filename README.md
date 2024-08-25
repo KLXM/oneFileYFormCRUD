@@ -136,6 +136,58 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 ```
 
-## Zusammenfassung
+## Vollständiger Beispielcode 
+Javascript siehe oben
 
-Mit der `YFormDataListRenderer`-Klasse lässt sich auf einfache Weise eine übersichtliche und interaktive Liste von Blog-Artikeln oder anderen Daten in Redaxo darstellen. Die Klasse ist flexibel einsetzbar und eignet sich für verschiedene Anwendungsfälle, nicht nur für Blogs. Egal, ob du eine einfache Verwaltungstabelle für deine Artikel oder eine komplexere Liste benötigst – diese Klasse bietet dir die notwendigen Werkzeuge, um dies schnell und einfach umzusetzen.
+```php
+<?php
+
+// Sicherstellen, dass die Klasse geladen ist (normalerweise sollte sie über ein Addon oder eine eigene Klasse verfügbar sein)
+if (!class_exists('YFormDataListRenderer')) {
+    // Hier die Klasse entweder einbinden oder anderweitig laden
+    // require_once 'path/to/YFormDataListRenderer.php';
+}
+
+$renderer = new YFormDataListRenderer();
+
+// Tabelle festlegen
+$renderer->setTableName('rex_blog_articles');
+
+// Felder definieren
+$renderer->setFields(['title', 'date', 'status', 'author']);
+
+// Bearbeitungslink-Muster festlegen
+$renderer->setEditLinkPattern(rex_getUrl('', '', ['func' => 'edit', 'id' => '{id}']));
+
+// Standard-Sortieroptionen festlegen
+$renderer->setDefaultSortField('date');
+$renderer->setDefaultSortOrder('DESC');
+
+// Übersetzungen einrichten
+$renderer->setTranslations([
+    'status' => [
+        '1' => '<span style="color: green; font-weight: bold;">Online</span>',
+        '0' => '<span style="color: red;">Offline</span>',
+    ]
+]);
+
+// Standardstatus für neue und bearbeitete Artikel festlegen
+$renderer->setNewStatus(0);  // Neuer Artikel ist standardmäßig "Offline"
+$renderer->setEditStatus(1); // Bearbeiteter Artikel wird auf "Online" gesetzt
+
+// Benutzerfeld festlegen (falls der aktuelle Benutzer als Autor gespeichert werden soll)
+$renderer->setUserField('author');
+
+// Optional: Formulartemplate anpassen
+// $renderer->setFormYtemplate('custom_template');
+
+// Liste rendern und ausgeben
+if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
+    echo $renderer->render();
+}
+
+?>
+```
+
+
+
