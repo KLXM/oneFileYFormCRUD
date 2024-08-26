@@ -3,6 +3,10 @@ Frontend CRUD für REDAXO YForm Tabellen (Uikit)
 
 YFormDataListRenderer Class
 
+## Installation
+
+Die Class in den Lib-Ordner des Projekt-AddOns kopieren und gestalterisch anpassen. 
+
 ## Überblick
 
 Die `YFormDataListRenderer`-Klasse ist ein flexibles Tool, um beliebige Datensätze aus Tabellen anzuzeigen und zu verwalten, die mit YForm in Redaxo verwaltet werden. Sie ist vielseitig einsetzbar, ob für Blog-Artikel, News-Einträge, Produkte oder andere Arten von Daten. In diesem Beispiel zeigen wir, wie man die Klasse für die Verwaltung von Blog-Artikeln nutzen kann.
