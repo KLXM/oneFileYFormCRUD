@@ -1,62 +1,75 @@
+Hier ist die aktualisierte README-Datei basierend auf der `YFormDataListRenderer`-Class. Ich habe Erläuterungen zu den fehlenden Methoden hinzugefügt und die Struktur der README-Datei entsprechend angepasst.
+
+---
+
 # oneFileYFormCRUD
-Frontend CRUD für REDAXO YForm Tabellen (Uikit)
 
-YFormDataListRenderer Class
+Frontend-CRUD für REDAXO YForm Tabellen (Uikit)
 
-## Installation
+## YFormDataListRenderer Class
 
-Die Class in den Lib-Ordner des Projekt-AddOns kopieren und gestalterisch anpassen. 
+### Installation
 
-## Überblick
+Die `YFormDataListRenderer`-Class in den Lib-Ordner des Projekt-AddOns kopieren und bei Bedarf gestalterisch anpassen.
 
-Die `YFormDataListRenderer`-Klasse ist ein flexibles Tool, um beliebige Datensätze aus Tabellen anzuzeigen und zu verwalten, die mit YForm in Redaxo verwaltet werden. Sie ist vielseitig einsetzbar, ob für Blog-Artikel, News-Einträge, Produkte oder andere Arten von Daten. In diesem Beispiel zeigen wir, wie man die Klasse für die Verwaltung von Blog-Artikeln nutzen kann.
+### Überblick
 
-## Wie's funktioniert
+Die `YFormDataListRenderer`-Class ist ein flexibles Tool, um Datensätze aus Tabellen, die mit YForm in REDAXO verwaltet werden, anzuzeigen und zu verwalten. Diese Class eignet sich für eine Vielzahl von Anwendungsfällen, wie z. B. Blog-Artikel, News-Einträge, Produkte oder andere Datentypen. Im Folgenden wird gezeigt, wie die Class für die Verwaltung von Blog-Artikeln verwendet werden kann.
 
-### 1. Renderer erstellen
+### Wie es funktioniert
 
-Zuerst wird eine Instanz der `YFormDataListRenderer`-Klasse benötigt:
+#### 1. Renderer erstellen
+
+Erstellen Sie eine Instanz der `YFormDataListRenderer`-Class:
 
 ```php
 $renderer = new YFormDataListRenderer();
 ```
 
-### 2. Tabelle festlegen
+#### 2. Tabelle festlegen
 
-Hier wird die Tabelle angegeben, aus der die Blog-Artikel abgerufen werden sollen. In unserem Beispiel nehmen wir an, dass die Tabelle `rex_blog_articles` heißt:
+Legen Sie die Tabelle fest, aus der die Datensätze abgerufen werden sollen. Zum Beispiel:
 
 ```php
 $renderer->setTableName('rex_blog_articles');
 ```
 
-### 3. Felder definieren
+#### 3. Felder definieren
 
-Nun werden die Felder festgelegt, die in der Liste angezeigt werden sollen. Für Blog-Artikel könnten das z. B. `title` (Titel des Artikels), `date` (Veröffentlichungsdatum), `status` (Online/Offline-Status) und `author` (Autor des Artikels) sein:
+Bestimmen Sie die Felder, die in der Liste angezeigt werden sollen:
 
 ```php
 $renderer->setFields(['title', 'date', 'status', 'author']);
 ```
 
-### 4. Bearbeitungslink-Muster festlegen
+#### 4. Bearbeitungslink-Muster festlegen
 
-Definiere das URL-Muster für das Bearbeiten von Artikeln. `{id}` ist dabei der Platzhalter für die Artikel-ID:
+Definieren Sie das URL-Muster für den Bearbeitungslink. `{id}` ist dabei der Platzhalter für die Datensatz-ID:
 
 ```php
 $renderer->setEditLinkPattern(rex_getUrl('', '', ['func' => 'edit', 'id' => '{id}']));
 ```
 
-### 5. Standard-Sortieroptionen festlegen
+#### 5. Standard-Sortieroptionen festlegen
 
-Wähle das Standardfeld und die Reihenfolge für die Sortierung aus. Für Blog-Artikel könnte es sinnvoll sein, nach dem Veröffentlichungsdatum in absteigender Reihenfolge zu sortieren:
+Legen Sie das Standardfeld und die Standardreihenfolge für die Sortierung fest:
 
 ```php
 $renderer->setDefaultSortField('date');
 $renderer->setDefaultSortOrder('DESC');
 ```
 
-### 6. Übersetzungen einrichten (Optional)
+#### 6. Bedingungen für die Datenauswahl hinzufügen
 
-Für das `status`-Feld können Übersetzungen oder benutzerdefiniertes HTML festgelegt werden. So kann beispielsweise der Status `1` als "Online" und `0` als "Offline" angezeigt werden:
+Fügen Sie Bedingungen für die Auswahl der Datensätze hinzu. Zum Beispiel:
+
+```php
+$renderer->addWhereCondition('status', '=', 1);
+```
+
+#### 7. Übersetzungen einrichten (optional)
+
+Definieren Sie Übersetzungen für bestimmte Feldwerte:
 
 ```php
 $renderer->setTranslations([
@@ -67,34 +80,56 @@ $renderer->setTranslations([
 ]);
 ```
 
-### 7. Standardstatus für neue und bearbeitete Artikel (Optional)
+#### 8. Standardstatus für neue und bearbeitete Datensätze (optional)
 
-Wenn beim Erstellen eines neuen Artikels oder beim Bearbeiten eines bestehenden Artikels der Status automatisch gesetzt werden soll:
+Legen Sie fest, welcher Status beim Erstellen oder Bearbeiten von Datensätzen gesetzt werden soll:
 
 ```php
-$renderer->setNewStatus(0);  // Neuer Artikel ist standardmäßig "Offline"
-$renderer->setEditStatus(1); // Bearbeiteter Artikel wird auf "Online" gesetzt
+$renderer->setNewStatus(0);  // Neuer Datensatz ist standardmäßig "Offline"
+$renderer->setEditStatus(1); // Bearbeiteter Datensatz wird auf "Online" gesetzt
 ```
 
-### 8. Benutzerfeld festlegen (Optional)
+#### 9. Benutzerfeld festlegen (optional)
 
-Falls der aktuelle Benutzer als Autor gespeichert werden soll, einfach das entsprechende Feld angeben:
+Speichern Sie den aktuellen Benutzer als Autor:
 
 ```php
 $renderer->setUserField('author');
 ```
 
-### 9. Formulartemplate anpassen (Optional)
+#### 10. Formulartemplate anpassen (optional)
 
-Wenn ein eigenes YForm-Template verwendet werden soll, kann dies so festgelegt werden:
+Legen Sie ein benutzerdefiniertes YForm-Template fest:
 
 ```php
 $renderer->setFormYtemplate('custom_template');
 ```
 
-### 10. Liste rendern
+#### 11. Formatierungs-Callbacks hinzufügen
 
-Zum Schluss wird die Liste mit der `render()`-Methode gerendert:
+Fügen Sie Formatierungs-Callbacks für bestimmte Felder hinzu:
+
+```php
+$renderer->setFormatCallback('title', function($value) {
+    return '<strong>' . htmlspecialchars($value) . '</strong>';
+});
+
+$renderer->setFormatCallback('date', function($value) {
+    return date('d.m.Y', strtotime($value));
+});
+```
+
+#### 12. Identifikationsfeld festlegen (optional)
+
+Falls nötig, können Sie ein Identifikationsfeld und dessen Wert setzen:
+
+```php
+$renderer->setIdentId('user_id', rex_ycom_auth::getUser()->getId());
+```
+
+#### 13. Liste rendern
+
+Zum Schluss rendern Sie die Liste und geben sie aus:
 
 ```php
 if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
@@ -102,9 +137,72 @@ if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
 }
 ```
 
+### Vollständiges Beispiel
+
+Hier ein vollständiger Beispielcode, der alle oben genannten Methoden verwendet:
+
+```php
+<?php
+
+$renderer = new YFormDataListRenderer();
+
+// Tabelle festlegen
+$renderer->setTableName('rex_blog_articles');
+
+// Felder definieren
+$renderer->setFields(['title', 'date', 'status', 'author']);
+
+// Bearbeitungslink-Muster festlegen
+$renderer->setEditLinkPattern(rex_getUrl('', '', ['func' => 'edit', 'id' => '{id}']));
+
+// Standard-Sortieroptionen festlegen
+$renderer->setDefaultSortField('date');
+$renderer->setDefaultSortOrder('DESC');
+
+// Bedingungen für die Datenauswahl hinzufügen
+$renderer->addWhereCondition('status', '=', 1);
+
+// Übersetzungen einrichten
+$renderer->setTranslations([
+    'status' => [
+        '1' => '<span style="color: green; font-weight: bold;">Online</span>',
+        '0' => '<span style="color: red;">Offline</span>',
+    ]
+]);
+
+// Standardstatus für neue und bearbeitete Datensätze festlegen
+$renderer->setNewStatus(0);
+$renderer->setEditStatus(1);
+
+// Benutzerfeld festlegen (optional)
+$renderer->setUserField('author');
+
+// Optional: Formulartemplate anpassen
+// $renderer->setFormYtemplate('custom_template');
+
+// Callbacks für die Formatierung
+$renderer->setFormatCallback('title', function($value) {
+    return '<strong>' . htmlspecialchars($value) . '</strong>';
+});
+
+$renderer->setFormatCallback('date', function($value) {
+    return date('d.m.Y', strtotime($value));
+});
+
+// Identifikationsfeld festlegen (optional)
+$renderer->setIdentId('user_id', rex_ycom_auth::getUser()->getId());
+
+// Liste rendern und ausgeben
+if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
+    echo $renderer->render();
+}
+
+?>
+```
+
 ### JavaScript einbinden
 
-Damit alles rund läuft, sollte das zugehörige JavaScript geladen werden. Das betrifft z. B. die Live-Suche und den Countdown für die automatische Rückleitung nach dem Löschen oder Bearbeiten eines Artikels:
+Um die Benutzerfreundlichkeit zu verbessern, können Sie optional JavaScript für Funktionen wie die Live-Suche oder einen Countdown-Timer hinzufügen.
 
 ```javascript
 document.addEventListener("DOMContentLoaded", function() {
@@ -139,62 +237,3 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 ```
-
-## Vollständiger Beispielcode 
-Javascript siehe oben
-
-```php
-<?php
-
-$renderer = new YFormDataListRenderer();
-
-// Tabelle festlegen
-$renderer->setTableName('rex_blog_articles');
-
-// Felder definieren
-$renderer->setFields(['title', 'date', 'status', 'author']);
-
-// Bearbeitungslink-Muster festlegen
-$renderer->setEditLinkPattern(rex_getUrl('', '', ['func' => 'edit', 'id' => '{id}']));
-
-// Standard-Sortieroptionen festlegen
-$renderer->setDefaultSortField('date');
-$renderer->setDefaultSortOrder('DESC');
-
-// Übersetzungen einrichten
-$renderer->setTranslations([
-    'status' => [
-        '1' => '<span style="color: green; font-weight: bold;">Online</span>',
-        '0' => '<span style="color: red;">Offline</span>',
-    ]
-]);
-
-// Standardstatus für neue und bearbeitete Artikel festlegen
-$renderer->setNewStatus(0);  // Neuer Artikel ist standardmäßig "Offline"
-$renderer->setEditStatus(1); // Bearbeiteter Artikel wird auf "Online" gesetzt
-
-// Benutzerfeld festlegen (falls der aktuelle Benutzer als Autor gespeichert werden soll)
-$renderer->setUserField('author');
-
-// Optional: Formulartemplate anpassen
-// $renderer->setFormYtemplate('custom_template');
-
-// Callbacks für die Formatierung
-$renderer->setFormatCallback('title', function($value) {
-    return '<strong>' . htmlspecialchars($value) . '</strong>';
-});
-
-$renderer->setFormatCallback('date', function($value) {
-    return date('d.m.Y', strtotime($value));
-});
-
-// Liste rendern und ausgeben
-if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
-    echo $renderer->render();
-}
-
-?>
-```
-
-
-
