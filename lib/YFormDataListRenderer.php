@@ -1,3 +1,6 @@
+<h2>Aktuell durch die Redaktion zu prüfen</h2>
+<hr>
+
 <?php
 class YFormDataListRenderer
 {
@@ -6,14 +9,16 @@ class YFormDataListRenderer
     private string $editLinkPattern;
     private string $defaultSortField = 'id';
     private string $defaultSortOrder = 'ASC';
-    private ?int $districtId = null;
+    private array $whereConditions = [];
     private array $translations = [];
-    private ?int $newStatus = 0;
+    private ?int $newStatus = 2;
     private ?int $editStatus = 1;
     private ?string $userField = null;
-    private string $formYtemplate = 'uikit3,project,bootstrap'; // Standardwert
+    private string $formYtemplate = 'uikit3,project,bootstrap';
     private array $formatCallbacks = [];
     private array $fieldLabels = [];
+    private ?string $identField = null;
+    private $identValue = null;
 
     public function setTableName(string $tableName): void
     {
@@ -41,9 +46,9 @@ class YFormDataListRenderer
         $this->defaultSortOrder = $defaultSortOrder;
     }
 
-    public function setDistrictId(?int $districtId): void
+    public function addWhereCondition(string $field, string $operator, $value): void
     {
-        $this->districtId = $districtId;
+        $this->whereConditions[] = [$field, $operator, $value];
     }
 
     public function setTranslations(array $translations): void
@@ -76,6 +81,12 @@ class YFormDataListRenderer
         $this->formatCallbacks[$field] = $callback;
     }
 
+    public function setIdentId(string $field, $value): void
+    {
+        $this->identField = $field;
+        $this->identValue = $value;
+    }
+
     private function loadFieldLabels(): void
     {
         $table = rex_yform_manager_table::get($this->tableName);
@@ -93,12 +104,10 @@ class YFormDataListRenderer
 
     public function render(): string
     {
-        // Sicherheitsprüfung und Standardwerte
         if (empty($this->tableName) || empty($this->fields) || !in_array(strtoupper($this->defaultSortOrder), ['ASC', 'DESC'])) {
             return 'Ungültige Parameter übergeben.';
         }
 
-        // Aktuelle Sortierung abfragen oder Standardwerte verwenden
         $currentSortField = rex_request('sort', 'string', $this->defaultSortField);
         $currentSortOrder = rex_request('order', 'string', $this->defaultSortOrder);
 
@@ -113,7 +122,17 @@ class YFormDataListRenderer
                         return '<div class="uk-alert-success" uk-alert>Datensatz wurde erfolgreich gelöscht.</div>
                                 <p>Sie werden in <span id="countdown">5</span> Sekunden zur Liste zurückgeleitet.</p>
                                 <p><a href="' . rex_getUrl(rex_article::getCurrentId()) . '">Klicken Sie hier</a>, um sofort zur Liste zurückzukehren.</p>
-                                <script src="path/to/your/javascript/file.js"></script>';
+                                <script>
+                                var countdown = 5;
+                                var interval = setInterval(function() {
+                                    countdown--;
+                                    document.getElementById("countdown").textContent = countdown;
+                                    if (countdown <= 0) {
+                                        clearInterval(interval);
+                                        window.location.href = "' . rex_getUrl(rex_article::getCurrentId()) . '";
+                                    }
+                                }, 1000);
+                                </script>';
                     } else {
                         return '<div class="uk-alert-danger" uk-alert>Fehler: Datensatz konnte nicht gelöscht werden.</div>';
                     }
@@ -123,7 +142,7 @@ class YFormDataListRenderer
             }
         }
 
-        // Prüfen, ob eine Bearbeitungsaktion oder eine Neuerstellung ausgeführt werden soll
+        // Bearbeitungs- und Hinzufügen-Aktionen
         $action = rex_request('func', 'string');
         $editId = rex_request('id', 'int', -1); // -1 bedeutet neuer Datensatz
         $isNew = ($editId === -1);
@@ -136,47 +155,50 @@ class YFormDataListRenderer
             }
 
             if ($dataset) {
-                // Erstelle das YForm-Objekt für das Formular
                 $yform = $dataset->getForm();
                 $yform->setObjectparams('form_action', rex_getUrl(rex_article::getCurrentId(), '', ['func' => $action, 'id' => $editId]));
-                $yform->setObjectparams('form_showformafterupdate', 0); // Formular nach Update nicht erneut anzeigen
+                $yform->setObjectparams('form_showformafterupdate', 0);
                 $yform->setObjectparams('main_id', $editId);
-                $yform->setObjectparams('getdata', !$isNew); // Nur Daten laden, wenn es sich um ein Edit handelt
-                $yform->setObjectparams('form_ytemplate', $this->formYtemplate); // Verwende das Template aus der Setter-Methode
+                $yform->setObjectparams('getdata', !$isNew);
+                $yform->setObjectparams('form_ytemplate', $this->formYtemplate);
 
-                // Überschrift je nach Aktion festlegen
                 $title = $isNew ? 'Neuer Eintrag' : 'Datensatz aktualisieren';
 
-                // Status für neuen Eintrag oder bearbeiteten Eintrag festlegen
                 if ($isNew && $this->newStatus !== null) {
                     $yform->setValueField('hidden', ['status', $this->newStatus]);
                 } elseif (!$isNew && $this->editStatus !== null) {
                     $yform->setValueField('hidden', ['status', $this->editStatus]);
                 }
 
-                // YCOM-Nutzernamen ermitteln und speichern, wenn ein Feldname angegeben wurde
                 if ($this->userField !== null && rex_ycom_auth::getUser() !== null) {
                     $username = rex_ycom_auth::getUser()->getValue('login');
                     $yform->setValueField('hidden', [$this->userField, $username]);
                 }
 
-                // District ID setzen
-                $yform->setValueField('hidden', ['district_id', $this->districtId]);
+                if ($this->identField !== null) {
+                    $yform->setValueField('hidden', [$this->identField, $this->identValue]);
+                }
 
-                // Formular ausführen
                 $form = '<div class="uk-background-muted uk-padding ">' . $dataset->executeForm($yform) . '</div>';
 
-                // Wenn das Formular erfolgreich ausgeführt wurde
                 if ($yform->objparams['actions_executed']) {
                     return '
                         <div class="uk-alert-success" uk-alert>
                             <h3>Der Datensatz wurde erfolgreich ' . ($isNew ? 'erstellt' : 'aktualisiert') . '.</h3>
                             <p>Sie werden in <span id="countdown">5</span> Sekunden zur Liste zurückgeleitet.</p>
                             <p><a href="' . rex_getUrl(rex_article::getCurrentId()) . '">Klicken Sie hier</a>, um sofort zur Liste zurückzukehren.</p>
-                        </div>
-                        <script src="path/to/your/javascript/file.js"></script>';
+                            <script>
+                            var countdown = 5;
+                            var interval = setInterval(function() {
+                                countdown--;
+                                document.getElementById("countdown").textContent = countdown;
+                                if (countdown <= 0) {
+                                    clearInterval(interval);
+                                    window.location.href = "' . rex_getUrl(rex_article::getCurrentId()) . '";
+                                }
+                            }, 1000);
+                            </script>';
                 } else {
-                    // Falls das Formular nicht erfolgreich gespeichert wurde, zeige es erneut an
                     return '<h2>' . $title . '</h2>' . $form;
                 }
             } else {
@@ -184,24 +206,17 @@ class YFormDataListRenderer
             }
         }
 
-        // Sortierreihenfolge umkehren
-        $nextSortOrder = ($currentSortOrder === 'ASC') ? 'DESC' : 'ASC';
-
-        // Filterbedingungen für district_id aufbauen
-        $whereSql = '';
-        if (!is_null($this->districtId)) {
-            $whereSql = 'district_id = ' . intval($this->districtId);
-        }
-
-        // Datenbankabfrage für die Datensätze mit YForm
+        // Datenanzeige
         $query = rex_yform_manager_table::get($this->tableName)->query();
-        if ($whereSql) {
-            $query->whereRaw($whereSql);
+
+        foreach ($this->whereConditions as $condition) {
+            [$field, $operator, $value] = $condition;
+            $query->whereRaw("`$field` $operator ?", [$value]);
         }
+
         $query->orderBy($currentSortField, $currentSortOrder);
         $datasets = $query->find();
 
-        // HTML-Ausgabe starten
         $output = '
             <div class="uk-margin-bottom">
                 <a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'add']) . '" class="uk-button uk-button-primary">Neuen Eintrag erstellen</a>
@@ -212,31 +227,27 @@ class YFormDataListRenderer
                 <table class="uk-table uk-table-striped uk-table-hover">
                     <thead><tr>';
 
-        // Kopfzeile für die Tabelle erstellen und Sortierlinks hinzufügen
         foreach ($this->fields as $field) {
             $label = $this->getFieldLabel($field);
             $sortIcon = '';
             if ($field == $currentSortField) {
                 $sortIcon = $currentSortOrder === 'ASC' ? ' &uarr;' : ' &darr;';
             }
-            $output .= '<th><a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['sort' => $field, 'order' => $nextSortOrder]) . '">' . htmlspecialchars($label) . $sortIcon . '</a></th>';
+            $output .= '<th><a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['sort' => $field, 'order' => $this->defaultSortOrder === 'ASC' ? 'DESC' : 'ASC']) . '">' . htmlspecialchars($label) . $sortIcon . '</a></th>';
         }
         $output .= '<th>Aktionen</th>';
         $output .= '</tr></thead>';
         $output .= '<tbody id="data-table">';
 
-        // Zeilen für jeden Datensatz erstellen
         foreach ($datasets as $dataset) {
             $output .= '<tr>';
             foreach ($this->fields as $field) {
                 $value = $dataset->getValue($field);
 
-                // Übersetzung für bestimmte Felder anwenden, z.B. 'status'
                 if (isset($this->translations[$field]) && isset($this->translations[$field][$value])) {
                     $value = $this->translations[$field][$value];
                 }
 
-                // Formatierung mit Callback, falls vorhanden
                 if (isset($this->formatCallbacks[$field])) {
                     $value = call_user_func($this->formatCallbacks[$field], $value);
                 }
@@ -244,7 +255,6 @@ class YFormDataListRenderer
                 $output .= '<td>' . $value . '</td>';
             }
 
-            // Bearbeiten- und Löschen-Icons erstellen
             $id = $dataset->getId();
             $editLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'edit', 'id' => $id]);
             $deleteLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'delete', 'id' => $id]);
@@ -261,6 +271,49 @@ class YFormDataListRenderer
 
         $output .= '</tbody></table></div>';
 
+        $output .= '<script src="path/to/your/javascript/file.js"></script>';
+
         return $output;
     }
 }
+
+// Beispiel für die Nutzung der Klasse
+$renderer = new YFormDataListRenderer();
+$renderer->setTableName('rex_yf_service');
+$renderer->setFields(['city', 'name', 'updated', 'status']);
+$renderer->setEditLinkPattern(rex_getUrl('', '', ['func' => 'edit', 'id' => '{id}']));
+$renderer->setDefaultSortField('name');
+$renderer->setDefaultSortOrder('ASC');
+$renderer->setTranslations([
+    'status' => [
+        '1' => '<span style="color: green; font-weight: bold;">Aktiv</span>',
+        '2' => '<span uk-icon="icon: bolt"></span><span style="color: blue; font-weight: bold;">Wird geprüft</span>',
+        '0' => '<span style="color: red;">Deaktiviert</span>',
+    ]
+]);
+
+// Where-Bedingungen hinzufügen
+$renderer->addWhereCondition('status', '=', 2);
+#$renderer->addWhereCondition('city', 'LIKE', '%Frankfurt%');
+
+// Callbacks für die Formatierung
+$renderer->setFormatCallback('name', function($value) {
+    return '<strong>' . htmlspecialchars($value) . '</strong>';
+});
+
+$renderer->setFormatCallback('updated', function($value) {
+    return date('d.m.Y', strtotime($value));
+});
+
+$renderer->setNewStatus(2);
+$renderer->setEditStatus(1);
+$renderer->setUserField('kreisuser');
+
+if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
+    $kreis = rex_ycom_auth::getUser()->getValue('landkreis');
+    $renderer->setIdentId('district_id', $kreis);
+    $renderer->addWhereCondition('district_id', '=', $kreis);
+    echo '<div class="uk-text-right"><a class="uk-button uk-button-default" target="live" href="https://offeneohren-hessen.de/?district=' . $kreis . '#search-section">Live-Ansicht</a></div><hr>';
+    echo $renderer->render();
+}
+?>
