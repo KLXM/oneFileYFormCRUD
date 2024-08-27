@@ -1,7 +1,3 @@
-Hier ist die aktualisierte README-Datei basierend auf der `YFormDataListRenderer`-Class. Ich habe Erläuterungen zu den fehlenden Methoden hinzugefügt und die Struktur der README-Datei entsprechend angepasst.
-
----
-
 # oneFileYFormCRUD
 
 Frontend-CRUD für REDAXO YForm Tabellen (Uikit)
