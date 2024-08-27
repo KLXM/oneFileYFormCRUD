@@ -1,6 +1,3 @@
-<h2>Aktuell durch die Redaktion zu prüfen</h2>
-<hr>
-
 <?php
 class YFormDataListRenderer
 {
@@ -275,45 +272,5 @@ class YFormDataListRenderer
 
         return $output;
     }
-}
-
-// Beispiel für die Nutzung der Klasse
-$renderer = new YFormDataListRenderer();
-$renderer->setTableName('rex_yf_service');
-$renderer->setFields(['city', 'name', 'updated', 'status']);
-$renderer->setEditLinkPattern(rex_getUrl('', '', ['func' => 'edit', 'id' => '{id}']));
-$renderer->setDefaultSortField('name');
-$renderer->setDefaultSortOrder('ASC');
-$renderer->setTranslations([
-    'status' => [
-        '1' => '<span style="color: green; font-weight: bold;">Aktiv</span>',
-        '2' => '<span uk-icon="icon: bolt"></span><span style="color: blue; font-weight: bold;">Wird geprüft</span>',
-        '0' => '<span style="color: red;">Deaktiviert</span>',
-    ]
-]);
-
-// Where-Bedingungen hinzufügen
-$renderer->addWhereCondition('status', '=', 2);
-#$renderer->addWhereCondition('city', 'LIKE', '%Frankfurt%');
-
-// Callbacks für die Formatierung
-$renderer->setFormatCallback('name', function($value) {
-    return '<strong>' . htmlspecialchars($value) . '</strong>';
-});
-
-$renderer->setFormatCallback('updated', function($value) {
-    return date('d.m.Y', strtotime($value));
-});
-
-$renderer->setNewStatus(2);
-$renderer->setEditStatus(1);
-$renderer->setUserField('kreisuser');
-
-if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
-    $kreis = rex_ycom_auth::getUser()->getValue('landkreis');
-    $renderer->setIdentId('district_id', $kreis);
-    $renderer->addWhereCondition('district_id', '=', $kreis);
-    echo '<div class="uk-text-right"><a class="uk-button uk-button-default" target="live" href="https://offeneohren-hessen.de/?district=' . $kreis . '#search-section">Live-Ansicht</a></div><hr>';
-    echo $renderer->render();
 }
 ?>
