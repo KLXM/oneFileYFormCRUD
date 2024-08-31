@@ -1,4 +1,5 @@
 <?php
+
 class YFormDataListRenderer
 {
     private string $tableName;
@@ -273,4 +274,3 @@ class YFormDataListRenderer
         return $output;
     }
 }
-?>
