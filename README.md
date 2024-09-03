@@ -122,6 +122,10 @@ Falls nötig, können Sie ein Identifikationsfeld und dessen Wert setzen:
 ```php
 $renderer->setIdentId('user_id', rex_ycom_auth::getUser()->getId());
 ```
+user_id ist nur ein Beispiel es kann jedes Feld genommen werden das ein Int annimmt. 
+Hier wird die ycom user id gespeichert (ideal für eine Relation) um den Ersteller zu tracken.  
+
+
 
 #### 13. Liste rendern
 
@@ -185,7 +189,7 @@ $renderer->setFormatCallback('date', function($value) {
     return date('d.m.Y', strtotime($value));
 });
 
-// Identifikationsfeld festlegen (optional)
+// Identifikationsfeld festlegen (optional), bitte achte darauf dass das Feld exitiert
 $renderer->setIdentId('user_id', rex_ycom_auth::getUser()->getId());
 
 // Liste rendern und ausgeben
