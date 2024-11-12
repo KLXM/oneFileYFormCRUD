@@ -269,8 +269,6 @@ class YFormDataListRenderer
 
         $output .= '</tbody></table></div>';
 
-        $output .= '<script src="path/to/your/javascript/file.js"></script>';
-
         return $output;
     }
 }
