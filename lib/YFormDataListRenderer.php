@@ -17,6 +17,101 @@ class YFormDataListRenderer
     private array $fieldLabels = [];
     private ?string $identField = null;
     private $identValue = null;
+    private string $framework = 'uikit';
+    private array $cssTemplates = [];
+    private string $displayMode = 'table';
+    private bool $showActions = true;
+
+    public function __construct()
+    {
+        $this->initializeCssTemplates();
+    }
+
+    private function initializeCssTemplates(): void
+    {
+        $this->cssTemplates = [
+            'uikit' => [
+                'alert_success' => 'uk-alert-success',
+                'alert_danger' => 'uk-alert-danger',
+                'alert_wrapper' => 'uk-alert',
+                'button_primary' => 'uk-button uk-button-primary',
+                'button_default' => 'uk-button uk-button-default',
+                'input' => 'uk-input',
+                'margin_bottom' => 'uk-margin-bottom',
+                'overflow_auto' => 'uk-overflow-auto',
+                'table' => 'uk-table uk-table-striped uk-table-hover',
+                'background_muted' => 'uk-background-muted',
+                'padding' => 'uk-padding',
+                'grid_small' => 'uk-grid-small uk-child-width-auto',
+                'tooltip' => 'uk-tooltip',
+                'icon' => 'uk-icon',
+            ],
+            'bootstrap3' => [
+                'alert_success' => 'alert alert-success',
+                'alert_danger' => 'alert alert-danger',
+                'alert_wrapper' => '',
+                'button_primary' => 'btn btn-primary',
+                'button_default' => 'btn btn-default',
+                'input' => 'form-control',
+                'margin_bottom' => 'margin-bottom',
+                'overflow_auto' => 'table-responsive',
+                'table' => 'table table-striped table-hover',
+                'background_muted' => 'bg-muted',
+                'padding' => 'padding',
+                'grid_small' => 'row',
+                'tooltip' => 'title',
+                'icon' => 'glyphicon',
+            ],
+            'bootstrap4' => [
+                'alert_success' => 'alert alert-success',
+                'alert_danger' => 'alert alert-danger',
+                'alert_wrapper' => '',
+                'button_primary' => 'btn btn-primary',
+                'button_default' => 'btn btn-secondary',
+                'input' => 'form-control',
+                'margin_bottom' => 'mb-3',
+                'overflow_auto' => 'table-responsive',
+                'table' => 'table table-striped table-hover',
+                'background_muted' => 'bg-light',
+                'padding' => 'p-3',
+                'grid_small' => 'row',
+                'tooltip' => 'title',
+                'icon' => 'fas',
+            ],
+            'bootstrap5' => [
+                'alert_success' => 'alert alert-success',
+                'alert_danger' => 'alert alert-danger',
+                'alert_wrapper' => '',
+                'button_primary' => 'btn btn-primary',
+                'button_default' => 'btn btn-secondary',
+                'input' => 'form-control',
+                'margin_bottom' => 'mb-3',
+                'overflow_auto' => 'table-responsive',
+                'table' => 'table table-striped table-hover',
+                'background_muted' => 'bg-light',
+                'padding' => 'p-3',
+                'grid_small' => 'row',
+                'tooltip' => 'title',
+                'icon' => 'bi',
+            ],
+            'custom' => [
+                'alert_success' => 'success-message',
+                'alert_danger' => 'error-message',
+                'alert_wrapper' => 'alert',
+                'button_primary' => 'btn-primary',
+                'button_default' => 'btn-default',
+                'input' => 'input',
+                'margin_bottom' => 'mb',
+                'overflow_auto' => 'overflow-auto',
+                'table' => 'table striped hover',
+                'background_muted' => 'bg-muted',
+                'padding' => 'p',
+                'grid_small' => 'grid-small',
+                'tooltip' => 'tooltip',
+                'icon' => 'icon',
+            ]
+        ];
+    }
 
     public function setTableName(string $tableName): void
     {
@@ -85,6 +180,42 @@ class YFormDataListRenderer
         $this->identValue = $value;
     }
 
+    public function setFramework(string $framework): void
+    {
+        if (isset($this->cssTemplates[$framework])) {
+            $this->framework = $framework;
+        }
+    }
+
+    public function setDisplayMode(string $mode): void
+    {
+        if (in_array($mode, ['table', 'cards', 'list'])) {
+            $this->displayMode = $mode;
+        }
+    }
+
+    public function setShowActions(bool $showActions): void
+    {
+        $this->showActions = $showActions;
+    }
+
+    public function setCssTemplate(string $framework, array $template): void
+    {
+        $this->cssTemplates[$framework] = $template;
+    }
+
+    public function setCssClass(string $framework, string $key, string $class): void
+    {
+        if (isset($this->cssTemplates[$framework])) {
+            $this->cssTemplates[$framework][$key] = $class;
+        }
+    }
+
+    private function getCssClass(string $key): string
+    {
+        return $this->cssTemplates[$this->framework][$key] ?? '';
+    }
+
     private function loadFieldLabels(): void
     {
         $table = rex_yform_manager_table::get($this->tableName);
@@ -117,7 +248,13 @@ class YFormDataListRenderer
                 if ($dataset) {
                     $deleteResult = $dataset->delete();
                     if ($deleteResult) {
-                        return '<div class="uk-alert-success" uk-alert>Datensatz wurde erfolgreich gelöscht.</div>
+                        $alertClass = $this->getCssClass('alert_success');
+                        $alertWrapper = $this->getCssClass('alert_wrapper');
+                        $alertWrapperAttr = $alertWrapper ? ' ' . $alertWrapper : '';
+                        if ($this->framework === 'uikit') {
+                            $alertWrapperAttr = ' uk-alert';
+                        }
+                        return '<div class="' . $alertClass . '"' . $alertWrapperAttr . '>Datensatz wurde erfolgreich gelöscht.</div>
                                 <p>Sie werden in <span id="countdown">5</span> Sekunden zur Liste zurückgeleitet.</p>
                                 <p><a href="' . rex_getUrl(rex_article::getCurrentId()) . '">Klicken Sie hier</a>, um sofort zur Liste zurückzukehren.</p>
                                 <script>
@@ -132,10 +269,22 @@ class YFormDataListRenderer
                                 }, 1000);
                                 </script>';
                     } else {
-                        return '<div class="uk-alert-danger" uk-alert>Fehler: Datensatz konnte nicht gelöscht werden.</div>';
+                        $alertClass = $this->getCssClass('alert_danger');
+                        $alertWrapper = $this->getCssClass('alert_wrapper');
+                        $alertWrapperAttr = $alertWrapper ? ' ' . $alertWrapper : '';
+                        if ($this->framework === 'uikit') {
+                            $alertWrapperAttr = ' uk-alert';
+                        }
+                        return '<div class="' . $alertClass . '"' . $alertWrapperAttr . '>Fehler: Datensatz konnte nicht gelöscht werden.</div>';
                     }
                 } else {
-                    return '<div class="uk-alert-danger" uk-alert>Fehler: Datensatz konnte nicht gefunden werden.</div>';
+                    $alertClass = $this->getCssClass('alert_danger');
+                    $alertWrapper = $this->getCssClass('alert_wrapper');
+                    $alertWrapperAttr = $alertWrapper ? ' ' . $alertWrapper : '';
+                    if ($this->framework === 'uikit') {
+                        $alertWrapperAttr = ' uk-alert';
+                    }
+                    return '<div class="' . $alertClass . '"' . $alertWrapperAttr . '>Fehler: Datensatz konnte nicht gefunden werden.</div>';
                 }
             }
         }
@@ -177,11 +326,17 @@ class YFormDataListRenderer
                     $yform->setValueField('hidden', [$this->identField, $this->identValue]);
                 }
 
-                $form = '<div class="uk-background-muted uk-padding ">' . $dataset->executeForm($yform) . '</div>';
+                $form = '<div class="' . $this->getCssClass('background_muted') . ' ' . $this->getCssClass('padding') . '">' . $dataset->executeForm($yform) . '</div>';
 
                 if ($yform->objparams['actions_executed']) {
+                    $alertClass = $this->getCssClass('alert_success');
+                    $alertWrapper = $this->getCssClass('alert_wrapper');
+                    $alertWrapperAttr = $alertWrapper ? ' ' . $alertWrapper : '';
+                    if ($this->framework === 'uikit') {
+                        $alertWrapperAttr = ' uk-alert';
+                    }
                     return '
-                        <div class="uk-alert-success" uk-alert>
+                        <div class="' . $alertClass . '"' . $alertWrapperAttr . '>
                             <h3>Der Datensatz wurde erfolgreich ' . ($isNew ? 'erstellt' : 'aktualisiert') . '.</h3>
                             <p>Sie werden in <span id="countdown">5</span> Sekunden zur Liste zurückgeleitet.</p>
                             <p><a href="' . rex_getUrl(rex_article::getCurrentId()) . '">Klicken Sie hier</a>, um sofort zur Liste zurückzukehren.</p>
@@ -200,7 +355,13 @@ class YFormDataListRenderer
                     return '<h2>' . $title . '</h2>' . $form;
                 }
             } else {
-                return '<div class="uk-alert-danger" uk-alert>Fehler: Datensatz konnte nicht gefunden werden.</div>';
+                $alertClass = $this->getCssClass('alert_danger');
+                $alertWrapper = $this->getCssClass('alert_wrapper');
+                $alertWrapperAttr = $alertWrapper ? ' ' . $alertWrapper : '';
+                if ($this->framework === 'uikit') {
+                    $alertWrapperAttr = ' uk-alert';
+                }
+                return '<div class="' . $alertClass . '"' . $alertWrapperAttr . '>Fehler: Datensatz konnte nicht gefunden werden.</div>';
             }
         }
 
@@ -215,14 +376,38 @@ class YFormDataListRenderer
         $query->orderBy($currentSortField, $currentSortOrder);
         $datasets = $query->find();
 
+        return $this->renderDataDisplay($datasets, $currentSortField, $currentSortOrder);
+    }
+
+    private function renderDataDisplay($datasets, $currentSortField, $currentSortOrder): string
+    {
+        $buttons = '';
+        if ($this->showActions) {
+            $buttons = '
+            <div class="' . $this->getCssClass('margin_bottom') . '">
+                <a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'add']) . '" class="' . $this->getCssClass('button_primary') . '">Neuen Eintrag erstellen</a>
+                <a href="' . rex_getUrl(rex_article::getCurrentId()) . '" class="' . $this->getCssClass('button_default') . '">Standard-Sortierung wiederherstellen</a>
+            </div>';
+        }
+
+        $searchInput = '<input class="' . $this->getCssClass('input') . ' ' . $this->getCssClass('margin_bottom') . '" id="live-search" type="text" placeholder="Nach Einträgen suchen...">';
+
+        switch ($this->displayMode) {
+            case 'cards':
+                return $buttons . $searchInput . $this->renderCardsView($datasets, $currentSortField, $currentSortOrder);
+            case 'list':
+                return $buttons . $searchInput . $this->renderListView($datasets, $currentSortField, $currentSortOrder);
+            case 'table':
+            default:
+                return $buttons . $searchInput . $this->renderTableView($datasets, $currentSortField, $currentSortOrder);
+        }
+    }
+
+    private function renderTableView($datasets, $currentSortField, $currentSortOrder): string
+    {
         $output = '
-            <div class="uk-margin-bottom">
-                <a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'add']) . '" class="uk-button uk-button-primary">Neuen Eintrag erstellen</a>
-                <a href="' . rex_getUrl(rex_article::getCurrentId()) . '" class="uk-button uk-button-default">Standard-Sortierung wiederherstellen</a>
-            </div>
-            <input class="uk-input uk-margin-bottom" id="live-search" type="text" placeholder="Nach Einträgen suchen...">
-            <div class="uk-overflow-auto">
-                <table class="uk-table uk-table-striped uk-table-hover">
+            <div class="' . $this->getCssClass('overflow_auto') . '">
+                <table class="' . $this->getCssClass('table') . '">
                     <thead><tr>';
 
         foreach ($this->fields as $field) {
@@ -233,7 +418,9 @@ class YFormDataListRenderer
             }
             $output .= '<th><a href="' . rex_getUrl(rex_article::getCurrentId(), '', ['sort' => $field, 'order' => $this->defaultSortOrder === 'ASC' ? 'DESC' : 'ASC']) . '">' . htmlspecialchars($label) . $sortIcon . '</a></th>';
         }
-        $output .= '<th>Aktionen</th>';
+        if ($this->showActions) {
+            $output .= '<th>Aktionen</th>';
+        }
         $output .= '</tr></thead>';
         $output .= '<tbody id="data-table">';
 
@@ -253,22 +440,166 @@ class YFormDataListRenderer
                 $output .= '<td>' . $value . '</td>';
             }
 
-            $id = $dataset->getId();
-            $editLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'edit', 'id' => $id]);
-            $deleteLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'delete', 'id' => $id]);
+            if ($this->showActions) {
+                $id = $dataset->getId();
+                $editLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'edit', 'id' => $id]);
+                $deleteLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'delete', 'id' => $id]);
 
-            $output .= '<td>
-                            <div class="uk-grid-small uk-child-width-auto" uk-grid>
-                                <div><a href="' . $editLink . '" uk-tooltip="Bearbeiten" uk-icon="icon: pencil"></a></div>
-                                <div><a href="' . $deleteLink . '" uk-tooltip="Löschen" uk-icon="icon: trash" onclick="return confirm(\'Wirklich löschen?\');"></a></div>
-                            </div>
-                        </td>';
+                if ($this->framework === 'uikit') {
+                    $output .= '<td>
+                                    <div class="uk-grid-small uk-child-width-auto" uk-grid>
+                                        <div><a href="' . $editLink . '" uk-tooltip="Bearbeiten" uk-icon="icon: pencil"></a></div>
+                                        <div><a href="' . $deleteLink . '" uk-tooltip="Löschen" uk-icon="icon: trash" onclick="return confirm(\'Wirklich löschen?\');"></a></div>
+                                    </div>
+                                </td>';
+                } else {
+                    $editIcon = $this->getEditIcon();
+                    $deleteIcon = $this->getDeleteIcon();
+                    $output .= '<td>
+                                    <div class="' . $this->getCssClass('grid_small') . '">
+                                        <div><a href="' . $editLink . '" title="Bearbeiten">' . $editIcon . '</a></div>
+                                        <div><a href="' . $deleteLink . '" title="Löschen" onclick="return confirm(\'Wirklich löschen?\');">' . $deleteIcon . '</a></div>
+                                    </div>
+                                </td>';
+                }
+            }
 
             $output .= '</tr>';
         }
 
-        $output .= '</tbody></table></div>';
+        return $output . '</tbody></table></div>';
+    }
 
-        return $output;
+    private function renderCardsView($datasets, $currentSortField, $currentSortOrder): string
+    {
+        $output = '<div class="' . $this->getCssClass('grid_small') . '" data-grid>';
+
+        foreach ($datasets as $dataset) {
+            $output .= '<div class="card-item">';
+            if ($this->framework === 'bootstrap3' || $this->framework === 'bootstrap4' || $this->framework === 'bootstrap5') {
+                $output .= '<div class="card">';
+                $output .= '<div class="card-body">';
+            } elseif ($this->framework === 'uikit') {
+                $output .= '<div class="uk-card uk-card-default uk-card-body">';
+            } else {
+                $output .= '<div class="card">';
+            }
+
+            foreach ($this->fields as $field) {
+                $value = $dataset->getValue($field);
+                $label = $this->getFieldLabel($field);
+
+                if (isset($this->translations[$field]) && isset($this->translations[$field][$value])) {
+                    $value = $this->translations[$field][$value];
+                }
+
+                if (isset($this->formatCallbacks[$field])) {
+                    $value = call_user_func($this->formatCallbacks[$field], $value);
+                }
+
+                $output .= '<p><strong>' . htmlspecialchars($label) . ':</strong> ' . $value . '</p>';
+            }
+
+            if ($this->showActions) {
+                $id = $dataset->getId();
+                $editLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'edit', 'id' => $id]);
+                $deleteLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'delete', 'id' => $id]);
+
+                $editIcon = $this->getEditIcon();
+                $deleteIcon = $this->getDeleteIcon();
+
+                $output .= '<div class="actions">';
+                $output .= '<a href="' . $editLink . '" class="' . $this->getCssClass('button_default') . '" title="Bearbeiten">' . $editIcon . ' Bearbeiten</a> ';
+                $output .= '<a href="' . $deleteLink . '" class="' . $this->getCssClass('button_default') . '" title="Löschen" onclick="return confirm(\'Wirklich löschen?\');">' . $deleteIcon . ' Löschen</a>';
+                $output .= '</div>';
+            }
+
+            if ($this->framework === 'bootstrap3' || $this->framework === 'bootstrap4' || $this->framework === 'bootstrap5') {
+                $output .= '</div></div>';
+            } elseif ($this->framework === 'uikit') {
+                $output .= '</div>';
+            } else {
+                $output .= '</div>';
+            }
+            $output .= '</div>';
+        }
+
+        return $output . '</div>';
+    }
+
+    private function renderListView($datasets, $currentSortField, $currentSortOrder): string
+    {
+        $output = '<ul class="data-list">';
+
+        foreach ($datasets as $dataset) {
+            $output .= '<li>';
+
+            foreach ($this->fields as $field) {
+                $value = $dataset->getValue($field);
+                $label = $this->getFieldLabel($field);
+
+                if (isset($this->translations[$field]) && isset($this->translations[$field][$value])) {
+                    $value = $this->translations[$field][$value];
+                }
+
+                if (isset($this->formatCallbacks[$field])) {
+                    $value = call_user_func($this->formatCallbacks[$field], $value);
+                }
+
+                $output .= '<span class="field-' . $field . '"><strong>' . htmlspecialchars($label) . ':</strong> ' . $value . '</span> ';
+            }
+
+            if ($this->showActions) {
+                $id = $dataset->getId();
+                $editLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'edit', 'id' => $id]);
+                $deleteLink = rex_getUrl(rex_article::getCurrentId(), '', ['func' => 'delete', 'id' => $id]);
+
+                $editIcon = $this->getEditIcon();
+                $deleteIcon = $this->getDeleteIcon();
+
+                $output .= '<span class="actions">';
+                $output .= '<a href="' . $editLink . '" title="Bearbeiten">' . $editIcon . '</a> ';
+                $output .= '<a href="' . $deleteLink . '" title="Löschen" onclick="return confirm(\'Wirklich löschen?\');">' . $deleteIcon . '</a>';
+                $output .= '</span>';
+            }
+
+            $output .= '</li>';
+        }
+
+        return $output . '</ul>';
+    }
+
+    private function getEditIcon(): string
+    {
+        switch ($this->framework) {
+            case 'bootstrap3':
+                return '<span class="glyphicon glyphicon-pencil"></span>';
+            case 'bootstrap4':
+                return '<i class="fas fa-edit"></i>';
+            case 'bootstrap5':
+                return '<i class="bi bi-pencil"></i>';
+            case 'uikit':
+                return ''; // UIKit uses uk-icon attribute
+            case 'custom':
+            default:
+                return '<span class="icon-edit">✏️</span>';
+        }
+    }
+
+    private function getDeleteIcon(): string
+    {
+        switch ($this->framework) {
+            case 'bootstrap3':
+                return '<span class="glyphicon glyphicon-trash"></span>';
+            case 'bootstrap4':
+                return '<i class="fas fa-trash"></i>';
+            case 'bootstrap5':
+                return '<i class="bi bi-trash"></i>';
+            case 'uikit':
+                return ''; // UIKit uses uk-icon attribute
+            case 'custom':
+            default:
+                return '<span class="icon-delete">🗑️</span>';
+        }
     }
 }
