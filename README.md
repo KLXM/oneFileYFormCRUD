@@ -1,6 +1,6 @@
 # oneFileYFormCRUD
 
-Frontend-CRUD für REDAXO YForm Tabellen (Uikit)
+Frontend-CRUD für REDAXO YForm Tabellen mit flexiblen CSS-Frameworks
 
 ## YFormDataListRenderer Class
 
@@ -10,7 +10,76 @@ Die `YFormDataListRenderer`-Class in den Lib-Ordner des Projekt-AddOns kopieren 
 
 ### Überblick
 
-Die `YFormDataListRenderer`-Class ist ein flexibles Tool, um Datensätze aus Tabellen, die mit YForm in REDAXO verwaltet werden, anzuzeigen und zu verwalten. Diese Class eignet sich für eine Vielzahl von Anwendungsfällen, wie z. B. Blog-Artikel, News-Einträge, Produkte oder andere Datentypen. Im Folgenden wird gezeigt, wie die Class für die Verwaltung von Blog-Artikeln verwendet werden kann.
+Die `YFormDataListRenderer`-Class ist ein flexibles Tool, um Datensätze aus Tabellen, die mit YForm in REDAXO verwaltet werden, anzuzeigen und zu verwalten. Diese Class eignet sich für eine Vielzahl von Anwendungsfällen, wie z. B. Blog-Artikel, News-Einträge, Produkte oder andere Datentypen.
+
+**NEU: Fragment/Template-System für CSS-Frameworks**
+Die Class unterstützt jetzt verschiedene CSS-Frameworks über ein flexibles Fragment-System:
+- **UIKit** (Standard)
+- **Bootstrap 3**
+- **Bootstrap 4** 
+- **Bootstrap 5**
+- **Custom CSS** (eigene Framework-Definition)
+
+Zusätzlich können verschiedene Anzeigemodi verwendet werden:
+- **Table** (Tabellenansicht)
+- **Cards** (Kartenansicht)
+- **List** (Listenansicht)
+
+### Framework-Konfiguration
+
+#### Framework setzen
+```php
+// UIKit (Standard)
+$renderer->setFramework('uikit');
+
+// Bootstrap 5
+$renderer->setFramework('bootstrap5');
+
+// Bootstrap 4
+$renderer->setFramework('bootstrap4');
+
+// Bootstrap 3
+$renderer->setFramework('bootstrap3');
+
+// Custom CSS
+$renderer->setFramework('custom');
+```
+
+#### Anzeigemodus konfigurieren
+```php
+// Tabellenansicht (Standard)
+$renderer->setDisplayMode('table');
+
+// Kartenansicht
+$renderer->setDisplayMode('cards');
+
+// Listenansicht
+$renderer->setDisplayMode('list');
+```
+
+#### Aktions-Buttons ein-/ausblenden
+```php
+// Aktionen anzeigen (Standard)
+$renderer->setShowActions(true);
+
+// Aktionen ausblenden (nur Anzeige, keine Bearbeitung)
+$renderer->setShowActions(false);
+```
+
+#### Individuelle CSS-Klassen anpassen
+```php
+// Einzelne CSS-Klasse überschreiben
+$renderer->setCssClass('bootstrap5', 'button_primary', 'btn btn-success btn-lg');
+
+// Komplettes CSS-Template definieren
+$customTemplate = [
+    'alert_success' => 'message success',
+    'button_primary' => 'button primary large',
+    'table' => 'data-table zebra hoverable',
+    // ... weitere Definitionen
+];
+$renderer->setCssTemplate('myframework', $customTemplate);
+```
 
 ### Wie es funktioniert
 
@@ -162,6 +231,12 @@ $renderer->setDefaultSortOrder('DESC');
 // Bedingungen für die Datenauswahl hinzufügen
 $renderer->addWhereCondition('status', '=', 1);
 
+// NEU: Framework konfigurieren (Bootstrap 5 statt UIKit)
+$renderer->setFramework('bootstrap5');
+
+// NEU: Anzeigemodus auf Karten setzen
+$renderer->setDisplayMode('cards');
+
 // Übersetzungen einrichten
 $renderer->setTranslations([
     'status' => [
@@ -198,6 +273,61 @@ if (rex::isFrontend() && rex_ycom_auth::getUser() !== null) {
 }
 
 ?>
+```
+
+### Framework-spezifische Beispiele
+
+#### Bootstrap 5 mit Kartenansicht
+```php
+$renderer = new YFormDataListRenderer();
+$renderer->setTableName('rex_products');
+$renderer->setFields(['name', 'price', 'category']);
+$renderer->setFramework('bootstrap5');
+$renderer->setDisplayMode('cards');
+echo $renderer->render();
+```
+
+#### Bootstrap 4 mit angepassten CSS-Klassen
+```php
+$renderer = new YFormDataListRenderer();
+$renderer->setTableName('rex_news');
+$renderer->setFields(['title', 'teaser', 'createdate']);
+$renderer->setFramework('bootstrap4');
+$renderer->setCssClass('bootstrap4', 'button_primary', 'btn btn-success btn-lg');
+$renderer->setCssClass('bootstrap4', 'table', 'table table-dark table-striped');
+echo $renderer->render();
+```
+
+#### Nur-Anzeige Modus (ohne Edit-Funktionen)
+```php
+$renderer = new YFormDataListRenderer();
+$renderer->setTableName('rex_events');
+$renderer->setFields(['title', 'date', 'location']);
+$renderer->setFramework('bootstrap5');
+$renderer->setDisplayMode('list');
+$renderer->setShowActions(false); // Keine Bearbeiten/Löschen-Buttons
+echo $renderer->render();
+```
+
+#### Eigenes CSS-Framework definieren
+```php
+$renderer = new YFormDataListRenderer();
+$renderer->setTableName('rex_gallery');
+$renderer->setFields(['title', 'image', 'description']);
+$renderer->setFramework('custom');
+
+// Eigene CSS-Klassen definieren
+$customTemplate = [
+    'alert_success' => 'message success',
+    'alert_danger' => 'message error',
+    'button_primary' => 'button primary large',
+    'button_default' => 'button secondary',
+    'table' => 'data-table zebra hoverable',
+    'input' => 'form-field',
+    // ... weitere CSS-Definitionen
+];
+$renderer->setCssTemplate('custom', $customTemplate);
+echo $renderer->render();
 ```
 
 ### JavaScript einbinden
